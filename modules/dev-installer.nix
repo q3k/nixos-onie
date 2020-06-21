@@ -9,7 +9,7 @@
     "${modulesPath}/profiles/installation-device.nix"
   ];
   networking.hostName = "nixos-onie-dev-installer";
-  system.stateVersion = "20.04";
+  system.stateVersion = "20.03";
   nix.maxJobs = 4;
   boot.loader.grub.enable = false;
   boot.kernelParams = [

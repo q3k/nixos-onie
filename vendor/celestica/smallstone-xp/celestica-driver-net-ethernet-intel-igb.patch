@@ -5,27 +5,27 @@ At: 856e0ac26ff78f8d033331b1bde9ccbe45a3530c
 SPDX-License-Identifier: GPL-2.0
 
 diff --git a/drivers/net/ethernet/intel/igb/e1000_82575.c b/drivers/net/ethernet/intel/igb/e1000_82575.c
-index f772df0..97724c1 100644
+index 438b42ce2cd9..9ddacf1c7a06 100644
 --- a/drivers/net/ethernet/intel/igb/e1000_82575.c
 +++ b/drivers/net/ethernet/intel/igb/e1000_82575.c
-@@ -366,7 +366,8 @@ static s32 igb_get_invariants_82575(struct e1000_hw *hw)
+@@ -393,7 +393,8 @@ static s32 igb_init_nvm_params_82575(struct e1000_hw *hw)
  	default:
- 		return -E1000_ERR_PHY;
+ 		break;
  	}
 -
-+	phy->ops.write_reg(hw,0x00,0x1140);
-+	phy->ops.write_reg(hw,0x04,0x1e1);
++	hw->phy.ops.write_reg(hw,0x00,0x1140);
++	hw->phy.ops.write_reg(hw,0x04,0x1e1);
  	return 0;
  }
  
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 4ac5f33..569418c 100644
+index b46bff8fe056..44780483dca5 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -3609,7 +3609,38 @@ static bool igb_thermal_sensor_event(struct e1000_hw *hw, u32 event)
- 
- 	return ret;
+@@ -3614,6 +3614,39 @@ static void igb_remove_i2c(struct igb_adapter *adapter)
+ 	i2c_del_adapter(&adapter->i2c_adap);
  }
+ 
 +static void ctrl_bcm54616S_led(struct e1000_hw *hw, u32 link, u16 speed)
 +{
 +   struct e1000_phy_info *phy = &hw->phy;
@@ -56,16 +56,18 @@ index 4ac5f33..569418c 100644
 +      phy->ops.write_reg(hw,0x1c,0xb4ee);
 +      phy->ops.write_reg(hw,0x1c,0xb86e);
 +  }
- 
++
 +}
++
  /**
-  * igb_watchdog - Timer Call-back
-  * @data: pointer to adapter cast into an unsigned long
-@@ -3708,6 +3739,7 @@ static void igb_watchdog_task(struct work_struct *work)
+  *  igb_remove - Device Removal Routine
+  *  @pdev: PCI device information struct
+@@ -5404,6 +5437,7 @@ static void igb_watchdog_task(struct work_struct *work)
  		}
  	}
  
-+        ctrl_bcm54616S_led(hw, link, adapter->link_speed);
++    ctrl_bcm54616S_led(hw, link, adapter->link_speed);
  	spin_lock(&adapter->stats64_lock);
- 	igb_update_stats(adapter, &adapter->stats64);
+ 	igb_update_stats(adapter);
  	spin_unlock(&adapter->stats64_lock);
+

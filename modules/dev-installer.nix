@@ -12,10 +12,4 @@
   system.stateVersion = "20.03";
   nix.maxJobs = 4;
   boot.loader.grub.enable = false;
-  boot.kernelParams = [
-    "console=tty0"
-    "console=tty1"
-    "console=tty2"
-    "console=ttyS0,115200"
-  ];
 }

@@ -5,10 +5,10 @@ At: 856e0ac26ff78f8d033331b1bde9ccbe45a3530c
 SPDX-License-Identifier: GPL-2.0
 
 diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
-index 4364303..8201419 100644
+index 26956c006987..43f3bcf7cabf 100644
 --- a/drivers/char/Kconfig
 +++ b/drivers/char/Kconfig
-@@ -384,6 +384,14 @@ config DS1302
+@@ -303,6 +303,14 @@ config EFI_RTC
  
  endif # RTC_LIB
  
@@ -24,20 +24,20 @@ index 4364303..8201419 100644
  	tristate "Double Talk PC internal speech card support"
  	depends on ISA
 diff --git a/drivers/char/Makefile b/drivers/char/Makefile
-index 32762ba..e022e92 100644
+index 7c5ea6f9df14..16fc3a7b54ec 100644
 --- a/drivers/char/Makefile
 +++ b/drivers/char/Makefile
-@@ -65,3 +65,4 @@ obj-$(CONFIG_JS_RTC)		+= js-rtc.o
- js-rtc-y = rtc.o
- 
- obj-$(CONFIG_TILE_SROM)		+= tile-srom.o
-+obj-$(CONFIG_CEL_REDSTONE_XP_CPLD)		+= cel-redstone-xp-cpld.o
+@@ -52,3 +52,4 @@ js-rtc-y = rtc.o
+ obj-$(CONFIG_XILLYBUS)		+= xillybus/
+ obj-$(CONFIG_POWERNV_OP_PANEL)	+= powernv-op-panel.o
+ obj-$(CONFIG_ADI)		+= adi.o
++obj-$(CONFIG_CEL_REDSTONE_XP_CPLD)     += cel-redstone-xp-cpld.o
 diff --git a/drivers/char/cel-redstone-xp-cpld.c b/drivers/char/cel-redstone-xp-cpld.c
 new file mode 100755
-index 0000000..54b213b
+index 000000000000..9d24c7a4ac44
 --- /dev/null
 +++ b/drivers/char/cel-redstone-xp-cpld.c
-@@ -0,0 +1,580 @@
+@@ -0,0 +1,583 @@
 +#include <linux/kernel.h>
 +#include <linux/module.h>
 +#include <linux/types.h>
@@ -49,6 +49,7 @@ index 0000000..54b213b
 +#include <linux/ioport.h>
 +#include <asm/io.h>
 +#include <asm/uaccess.h>
++#include <linux/compat.h>
 +
 +#ifdef DEBUG_CLS
 +# define DEBUG(fmt, ...) printk(fmt, ##__VA_ARGS__)
@@ -107,7 +108,9 @@ index 0000000..54b213b
 +
 +module_param(major, int, 0644);
 +
++#ifdef TEST
 +static phys_addr_t io_base = IO_BASE;
++#endif
 +static int use_count = 0;
 +
 +static int sfp_read(int ioBase, int portID, char devAddr, char reg, char *data, int len)
@@ -348,9 +351,9 @@ index 0000000..54b213b
 +		return( -ENOTTY );
 +	}
 +	if ( _IOC_DIR( cmd ) & _IOC_READ ) {
-+		err = !access_ok( VERIFY_WRITE,( void __user * )arg,_IOC_SIZE( cmd ) );
++		err = !access_ok(( void __user * )arg,_IOC_SIZE( cmd ) );
 +	} else if ( _IOC_DIR( cmd ) & _IOC_WRITE ) {
-+		err = !access_ok( VERIFY_READ,( void __user * )arg,_IOC_SIZE( cmd ) );
++		err = !access_ok(( void __user * )arg,_IOC_SIZE( cmd ) );
 +	}
 +	if ( err ) {
 +		return( -EFAULT );
@@ -619,21 +622,18 @@ index 0000000..54b213b
 +MODULE_AUTHOR("Celestica");
 +MODULE_DESCRIPTION("CPLD diver");
 diff --git a/drivers/i2c/busses/i2c-ismt.c b/drivers/i2c/busses/i2c-ismt.c
-index 09a3e03..2b9ceb1 100644
+index 2f95e25a10f7..fb02c76397bd 100644
 --- a/drivers/i2c/busses/i2c-ismt.c
 +++ b/drivers/i2c/busses/i2c-ismt.c
-@@ -70,9 +70,8 @@
+@@ -66,6 +66,7 @@
  #include <linux/i2c.h>
  #include <linux/acpi.h>
  #include <linux/interrupt.h>
--
 +#include <linux/delay.h>
- #include <asm-generic/io-64-nonatomic-lo-hi.h>
--
- /* PCI Address Constants */
- #define SMBBAR		0
  
-@@ -308,6 +307,8 @@ static void ismt_submit_desc(struct ismt_priv *priv)
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ 
+@@ -307,6 +308,8 @@ static void ismt_submit_desc(struct ismt_priv *priv)
  	val = readl(priv->smba + ISMT_MSTR_MCTRL);
  	writel(val | ISMT_MCTRL_SS,
  	       priv->smba + ISMT_MSTR_MCTRL);
@@ -642,12 +642,15 @@ index 09a3e03..2b9ceb1 100644
  }
  
  /**
-@@ -582,7 +583,7 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
+@@ -589,7 +592,7 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
  	ismt_submit_desc(priv);
  
  	/* Now we wait for interrupt completion, 1s */
--	ret = wait_for_completion_timeout(&priv->cmp, HZ*1);
-+	ret = wait_for_completion_timeout(&priv->cmp, HZ*5);
+-	time_left = wait_for_completion_timeout(&priv->cmp, HZ*1);
++	time_left = wait_for_completion_timeout(&priv->cmp, HZ*5);
  
  	/* unmap the data buffer */
  	if (dma_size != 0)
+-- 
+2.27.0
+

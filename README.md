@@ -15,10 +15,20 @@ Status
 
 We have a working interactive NixOS installer built as an ONIE image. To build:
 
-    nix build devImage
+    nix build default.nix devImage
 
 Then, use `result/onie-installer` as an ONIE installer image on your switch.
-You should get an interactive NixOS installer shell on ttyS0/tty0.
+You should get an interactive NixOS installer shell on ttyS0/tty0. You can then
+install NixOS in the standard way (currently there's no provision to install
+a target configuration directly, this will be automated at a later point).
+
+After installing, you can build updates for the D4040 NixOS configuration by
+building the 'target' attr instead.
+
+    nix build default.nix target
+
+You can then nix-copy-closure the resulting closure onto the target over SSH
+and call bin/switch-to-configuration there as usual.
 
 TODO
 ----

@@ -6,7 +6,7 @@
   boot.loader.grub = {
     enable = true;
     version = 2;
-    device = "nodev";
+    device = "/dev/sda";
     extraEntries = ''
       menuentry ONIE {
           search --no-floppy --label --set=root ONIE-BOOT

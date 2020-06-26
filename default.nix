@@ -38,13 +38,25 @@ in rec {
   target = nixos ({ config, pkgs, ... }: {
     imports = [
       ./modules/onie-nos.nix
+      ./modules/onie-toolbox.nix
       ./vendor/celestica/smallstone-xp/modules/default.nix
     ];
 
-    system.stateVersion = "20.03";
     fileSystems."/" = {
-      device = "/dev/disk/by-uuid/518ecac1-00ea-4ef0-9418-9eca6ce6d918"; # TODO(q3k): changeme
+      device = "/dev/disk/by-uuid/4a667b6b-561e-4ea6-8326-ff491e62f1c6";
       fsType = "ext4";
     };
+    swapDevices = [];
+
+    networking.useDHCP = false;
+    networking.interfaces.enp0s20f0.useDHCP = true;
+
+    users.users.root = {
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMb593DS2IR/ZnRBq9DHTCdQuNW1LghQAoa8WN8h3okC q3k@anathema"
+      ];
+    };
+
+    system.stateVersion = "20.09"; # Did you read the comment?
   });
 }
